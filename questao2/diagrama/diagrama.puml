@@ -1,0 +1,98 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' ===== Observer =====
+interface Observador <<Observer>> { +atualizar(lote, lance) }
+interface Licitante { +nome(): String }
+class Lote <<Subject / Context>> {
+  -nome: String
+  -precoInicial: double
+  -precoReserva: double
+  +acompanhar(o: Observador)
+  +deixarDeAcompanhar(o: Observador)
+  +darLance(autor: Licitante, valor): ResultadoLance
+  +trocarRegra(nova: RegraComissao)
+  +encerrar()
+}
+class Participante <<Concrete Observer>>
+class PainelLeiloeiro <<Concrete Observer>>
+class Auditor <<Concrete Observer>>
+class Lance <<record>>
+class ResultadoLance <<record>>
+
+Observador <|.. Participante
+Observador <|.. PainelLeiloeiro
+Observador <|.. Auditor
+Licitante <|.. Participante
+Lote o--> "*" Observador
+Lote *--> "*" Lance
+Lote ..> Licitante
+Lote ..> ResultadoLance
+
+' ===== Strategy =====
+interface RegraComissao <<Strategy>> {
+  +calcular(valorVenda): double
+  +descricao(): String
+}
+class ComissaoArte <<Concrete Strategy>>
+class ComissaoVeiculos <<Concrete Strategy>>
+class ComissaoImoveis <<Concrete Strategy>>
+class ComissaoEletronicos <<Concrete Strategy>>
+interface Categoria {
+  +nome(): String
+  +regraPadrao(): RegraComissao
+}
+class CategoriaArte
+class CategoriaVeiculos
+class CategoriaImoveis
+class CategoriaEletronicos
+
+RegraComissao <|.. ComissaoArte
+RegraComissao <|.. ComissaoVeiculos
+RegraComissao <|.. ComissaoImoveis
+RegraComissao <|.. ComissaoEletronicos
+Categoria <|.. CategoriaArte
+Categoria <|.. CategoriaVeiculos
+Categoria <|.. CategoriaImoveis
+Categoria <|.. CategoriaEletronicos
+Lote o--> RegraComissao
+Lote o--> Categoria
+CategoriaArte ..> ComissaoArte
+CategoriaVeiculos ..> ComissaoVeiculos
+CategoriaImoveis ..> ComissaoImoveis
+CategoriaEletronicos ..> ComissaoEletronicos
+class AcertoVendedor { +{static} imprimir(lote) }
+AcertoVendedor ..> Lote
+
+' ===== Decorator =====
+interface Fatura <<Component>> {
+  +detalhar(): String
+  +valorVenda(): double
+  +total(): double
+}
+class FaturaBase <<Concrete Component>>
+abstract class ServicoAdicional <<Decorator>> {
+  -fatura: Fatura
+  #descricao(): String
+  #custo(): double
+}
+class SeguroTransporte <<Concrete Decorator>>
+class CertificadoAutenticidade <<Concrete Decorator>>
+class EmbalagemEspecial <<Concrete Decorator>>
+class EntregaExpressa <<Concrete Decorator>>
+class ImpressoraFatura { +{static} imprimir(fatura) }
+
+Fatura <|.. FaturaBase
+Fatura <|.. ServicoAdicional
+ServicoAdicional o--> Fatura
+ServicoAdicional <|-- SeguroTransporte
+ServicoAdicional <|-- CertificadoAutenticidade
+ServicoAdicional <|-- EmbalagemEspecial
+ServicoAdicional <|-- EntregaExpressa
+ImpressoraFatura ..> Fatura
+
+class Main
+Main ..> Lote
+Main ..> Participante
+Main ..> Fatura
+@enduml

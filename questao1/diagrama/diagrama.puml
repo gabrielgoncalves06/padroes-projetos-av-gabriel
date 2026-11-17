@@ -1,0 +1,92 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+interface FabricaNuvem <<Abstract Factory>> {
+  +nome(): String
+  +precos(): Precos
+  +criarMaquina(): MaquinaVirtual
+  +criarArmazenamento(): Armazenamento
+  +criarFila(): Fila
+}
+class FabricaAws <<Concrete Factory>>
+class FabricaAzure <<Concrete Factory>>
+
+interface Recurso { +getId(): String }
+interface MaquinaVirtual <<Abstract Product>> { +custoPorHora(): double }
+interface Armazenamento <<Abstract Product>> { +custoPorGb(): double }
+interface Fila <<Abstract Product>> { +custoFixo(): double }
+
+class MaquinaAws <<Concrete Product>>
+class ArmazenamentoAws <<Concrete Product>>
+class FilaAws <<Concrete Product>>
+class MaquinaAzure <<Concrete Product>>
+class ArmazenamentoAzure <<Concrete Product>>
+class FilaAzure <<Concrete Product>>
+
+class Configuracao <<Singleton>> {
+  -regiaoPadrao: String
+  -orcamentoMensalMaximo: double
+  +{static} getInstance(): Configuracao
+}
+class HistoricoAuditoria <<Singleton>> {
+  -registros: List<RegistroAuditoria>
+  +{static} getInstance(): HistoricoAuditoria
+  +registrar(ambiente, provedor, resultado)
+  +listar(): List<RegistroAuditoria>
+}
+class RegistroAuditoria <<record>>
+class Precos <<record>> { +estimar(maquinas, gb): double }
+class SolicitacaoAmbiente <<record>>
+
+class SeletorProvedor <<Seletor de provedor>> {
+  +{static} obter(provedor): FabricaNuvem
+}
+class MontadorAmbiente <<Client>> {
+  +estimar(s): double
+  +montar(s, custo): Ambiente
+}
+class Provisionador {
+  +provisionar(s)
+}
+class Ambiente
+class Main
+
+FabricaNuvem <|.. FabricaAws
+FabricaNuvem <|.. FabricaAzure
+Recurso <|-- MaquinaVirtual
+Recurso <|-- Armazenamento
+Recurso <|-- Fila
+MaquinaVirtual <|.. MaquinaAws
+MaquinaVirtual <|.. MaquinaAzure
+Armazenamento <|.. ArmazenamentoAws
+Armazenamento <|.. ArmazenamentoAzure
+Fila <|.. FilaAws
+Fila <|.. FilaAzure
+
+FabricaAws ..> MaquinaAws : <<create>>
+FabricaAws ..> ArmazenamentoAws : <<create>>
+FabricaAws ..> FilaAws : <<create>>
+FabricaAzure ..> MaquinaAzure : <<create>>
+FabricaAzure ..> ArmazenamentoAzure : <<create>>
+FabricaAzure ..> FilaAzure : <<create>>
+FabricaAws ..> Precos
+FabricaAzure ..> Precos
+
+SeletorProvedor ..> FabricaAws : <<create>>
+SeletorProvedor ..> FabricaAzure : <<create>>
+SeletorProvedor ..> FabricaNuvem
+MontadorAmbiente o--> FabricaNuvem
+MontadorAmbiente ..> Ambiente : <<create>>
+MontadorAmbiente ..> Configuracao
+Provisionador ..> SeletorProvedor
+Provisionador ..> MontadorAmbiente
+Provisionador ..> Configuracao
+Provisionador ..> HistoricoAuditoria
+HistoricoAuditoria o--> "*" RegistroAuditoria
+Ambiente o--> "*" MaquinaVirtual
+Ambiente o--> Armazenamento
+Ambiente o--> Fila
+Main ..> Provisionador
+Main ..> SolicitacaoAmbiente
+Main ..> HistoricoAuditoria
+@enduml
